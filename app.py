@@ -8,6 +8,7 @@ Precisão > quantidade. Zero dados fictícios.
 from __future__ import annotations
 
 import html
+import os
 import sys
 from pathlib import Path
 
@@ -19,6 +20,7 @@ import streamlit as st
 
 from src.domain.models import Condition
 from src.persistence.repository import Repository
+from src.providers.mercadolivre import MercadoLivreProvider
 from src.services.search_pipeline import SearchPipeline
 
 st.set_page_config(
@@ -58,6 +60,23 @@ a.offer-link:hover { text-decoration:underline; }
 .stButton > button:hover { background: #1849A9; border-color: #1849A9; color: #FFFFFF; }
 </style>
 """, unsafe_allow_html=True)
+
+
+def get_secret(name: str) -> str | None:
+    """Read a Streamlit secret first, then an environment variable."""
+    try:
+        value = st.secrets.get(name)
+        if value:
+            return str(value).strip()
+    except Exception:
+        pass
+    value = os.getenv(name)
+    return value.strip() if value else None
+
+
+def build_pipeline() -> SearchPipeline:
+    token = get_secret("ML_ACCESS_TOKEN")
+    return SearchPipeline(providers=[MercadoLivreProvider(access_token=token)])
 
 
 def fmt_brl(value: float | None) -> str:
@@ -122,7 +141,7 @@ def render_offer_card(offer: dict) -> None:
 
 
 if "pipeline" not in st.session_state:
-    st.session_state.pipeline = SearchPipeline()
+    st.session_state.pipeline = build_pipeline()
 if "last_result" not in st.session_state:
     st.session_state.last_result = None
 
