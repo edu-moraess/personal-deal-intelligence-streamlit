@@ -7,6 +7,7 @@ Precisão > quantidade. Zero dados fictícios.
 
 from __future__ import annotations
 
+import html
 import sys
 from pathlib import Path
 
@@ -29,30 +30,126 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-.stApp { background-color: #fafafa; }
+:root {
+    --pdi-bg: #f7f8fa;
+    --pdi-surface: #ffffff;
+    --pdi-border: #e2e5e9;
+    --pdi-text: #17191c;
+    --pdi-muted: #69717d;
+    --pdi-accent: #2f5f8f;
+    --pdi-accent-soft: #eef4f9;
+}
+
+.stApp { background-color: var(--pdi-bg); color: var(--pdi-text); }
 .block-container { padding-top: 1.5rem; padding-bottom: 3rem; max-width: 1100px; }
 #MainMenu, footer, header { visibility: hidden; }
 .stDeployButton { display: none; }
-h1 { font-weight: 600; letter-spacing: -0.02em; color: #111; margin-bottom: 0.25rem; }
-.subtitle { color: #555; font-size: 0.95rem; margin-bottom: 1.5rem; }
-.stTextInput > div > div > input { border-radius: 8px; border: 1px solid #ddd; padding: 0.75rem 1rem; font-size: 1rem; }
-.offer-card { background:#fff; border:1px solid #e8e8e8; border-radius:12px; padding:1.1rem; margin-bottom:1rem; display:flex; flex-direction:column; gap:.75rem; height:100%; }
-.offer-image { width:100%; aspect-ratio:1; object-fit:contain; background:#f5f5f5; border-radius:8px; max-height:180px; }
-.offer-image-placeholder { width:100%; aspect-ratio:1; background:#f0f0f0; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#999; font-size:.8rem; max-height:180px; }
-.offer-title { font-size:.95rem; font-weight:600; color:#111; line-height:1.35; margin:0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.offer-store { font-size:.8rem; color:#666; margin:0; }
-.offer-price { font-size:1.25rem; font-weight:700; color:#111; margin:0; }
-.offer-original { font-size:.8rem; color:#999; text-decoration:line-through; }
-.offer-shipping { font-size:.8rem; color:#444; }
-.offer-effective { font-size:.85rem; color:#333; font-weight:500; }
-.match-exact,.match-high { display:inline-block; font-size:.72rem; font-weight:600; padding:.2rem .5rem; border-radius:4px; }
-.match-exact { color:#0a7a3e; background:#e8f7ef; }
-.match-high { color:#1a5f9e; background:#e8f1f9; }
-.history-line { font-size:.78rem; color:#555; line-height:1.4; }
-.status-unavailable { background:#fff5f5; border:1px solid #f5c6c6; border-radius:8px; padding:.9rem 1.1rem; color:#9b1c1c; font-size:.9rem; margin-bottom:1rem; }
-.empty-state { text-align:center; padding:2.5rem 1rem; color:#666; }
-a.offer-link { display:inline-block; margin-top:.4rem; font-size:.85rem; font-weight:600; color:#1a5f9e; text-decoration:none; }
-a.offer-link:hover { text-decoration:underline; }
+
+h1 { font-weight: 650; letter-spacing: -0.025em; color: var(--pdi-text); margin-bottom: 0.25rem; }
+.subtitle { color: var(--pdi-muted); font-size: 0.95rem; margin-bottom: 1.5rem; }
+
+.stTextInput > div > div > input,
+.stSelectbox > div > div {
+    border-radius: 8px;
+    border: 1px solid var(--pdi-border);
+    font-size: 1rem;
+}
+
+.stTextInput > div > div > input:focus {
+    border-color: var(--pdi-accent);
+    box-shadow: 0 0 0 1px var(--pdi-accent);
+}
+
+button[kind="primaryFormSubmit"],
+button[kind="primary"] {
+    background: var(--pdi-accent) !important;
+    border-color: var(--pdi-accent) !important;
+    color: #fff !important;
+}
+
+.offer-card {
+    background: var(--pdi-surface);
+    border: 1px solid var(--pdi-border);
+    border-radius: 12px;
+    padding: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    height: 100%;
+    box-shadow: 0 1px 2px rgba(20, 24, 30, .03);
+}
+
+.offer-image {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: contain;
+    background: #f2f4f6;
+    border-radius: 8px;
+    max-height: 180px;
+}
+
+.offer-image-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #f2f4f6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a929c;
+    font-size: .8rem;
+    max-height: 180px;
+}
+
+.offer-title {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--pdi-text);
+    line-height: 1.35;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.offer-store { font-size: .8rem; color: var(--pdi-muted); margin: 0; }
+.offer-price { font-size: 1.25rem; font-weight: 700; color: var(--pdi-text); margin: 0; }
+.offer-original { font-size: .8rem; color: #8a929c; text-decoration: line-through; }
+.offer-shipping { font-size: .8rem; color: #555e69; }
+.offer-effective { font-size: .85rem; color: #3e4650; font-weight: 500; }
+
+.match-exact, .match-high {
+    display: inline-block;
+    font-size: .72rem;
+    font-weight: 600;
+    padding: .2rem .5rem;
+    border-radius: 4px;
+}
+
+.match-exact { color: #315a7d; background: var(--pdi-accent-soft); }
+.match-high { color: #4d5f70; background: #f0f2f4; }
+.history-line { font-size: .78rem; color: #606974; line-height: 1.4; }
+
+.status-unavailable {
+    background: #f8f5f3;
+    border: 1px solid #e6ddd7;
+    border-radius: 8px;
+    padding: .9rem 1.1rem;
+    color: #67574e;
+    font-size: .9rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state { text-align: center; padding: 2.5rem 1rem; color: var(--pdi-muted); }
+a.offer-link { display: inline-block; margin-top: .4rem; font-size: .85rem; font-weight: 600; color: var(--pdi-accent); text-decoration: none; }
+a.offer-link:hover { text-decoration: underline; }
+
+@media (max-width: 640px) {
+    .block-container { padding-left: 1rem; padding-right: 1rem; }
+    .offer-card { padding: .9rem; }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -68,13 +165,14 @@ def match_label(level: str) -> str:
         return '<span class="match-exact">Correspondência exata</span>'
     if level == "HIGH_MATCH":
         return '<span class="match-high">Alta correspondência</span>'
-    return level
+    return html.escape(level)
 
 
 def render_offer_card(offer: dict) -> None:
+    image_url = offer.get("image_url")
     image_html = (
-        f'<img src="{offer["image_url"]}" class="offer-image" alt="" loading="lazy" />'
-        if offer.get("image_url")
+        f'<img src="{html.escape(str(image_url), quote=True)}" class="offer-image" alt="" loading="lazy" />'
+        if image_url
         else '<div class="offer-image-placeholder">Imagem não fornecida</div>'
     )
     original_html = ""
@@ -83,7 +181,7 @@ def render_offer_card(offer: dict) -> None:
     if offer.get("free_shipping"):
         shipping_txt = "Frete grátis"
     elif offer.get("shipping") is not None:
-        shipping_txt = f"+ {fmt_brl(offer['shipping'])} de frete"
+        shipping_txt = f"+ {fmt_brl(offer[\'shipping\'])} de frete"
     else:
         shipping_txt = "Frete não informado"
     history = offer.get("history_summary") or "Histórico insuficiente"
@@ -91,25 +189,28 @@ def render_offer_card(offer: dict) -> None:
     if stats.get("sufficient"):
         parts = []
         if stats.get("min_30d") is not None:
-            parts.append(f"Mín. 30d: {fmt_brl(stats['min_30d'])}")
+            parts.append(f"Mín. 30d: {fmt_brl(stats[\'min_30d\'])}")
         if stats.get("avg_30d") is not None:
-            parts.append(f"Média 30d: {fmt_brl(stats['avg_30d'])}")
+            parts.append(f"Média 30d: {fmt_brl(stats[\'avg_30d\'])}")
         if stats.get("count"):
-            parts.append(f"{stats['count']} obs.")
+            parts.append(f"{stats[\'count\']} obs.")
         history = " · ".join(parts) if parts else history
     condition = "Novo" if offer.get("condition") == "new" else "Usado"
+    title = html.escape(str(offer.get("title", "")))
+    store = html.escape(str(offer.get("store", "")))
+    permalink = html.escape(str(offer.get("permalink", "#")), quote=True)
     st.markdown(f"""
     <div class="offer-card">
         {image_html}
-        <p class="offer-title">{offer.get("title", "")}</p>
-        <p class="offer-store">{offer.get("store", "")} · {condition}</p>
+        <p class="offer-title">{title}</p>
+        <p class="offer-store">{store} · {condition}</p>
         {original_html}
         <p class="offer-price">{fmt_brl(offer.get("price"))}</p>
         <div class="offer-shipping">{shipping_txt}</div>
         <div class="offer-effective">Preço efetivo: {fmt_brl(offer.get("effective_price"))}</div>
         <div>{match_label(offer.get("match_level", ""))}</div>
         <div class="history-line">{history}</div>
-        <a class="offer-link" href="{offer.get("permalink", "#")}" target="_blank" rel="noopener noreferrer">Ver oferta</a>
+        <a class="offer-link" href="{permalink}" target="_blank" rel="noopener noreferrer">Ver oferta</a>
     </div>
     """, unsafe_allow_html=True)
 
@@ -167,7 +268,8 @@ if result is not None:
     for ps in result.get("provider_statuses", []):
         if ps.get("status") != "AVAILABLE":
             msg = ps.get("message") or f"{ps.get('provider')} — indisponível no momento"
-            st.markdown(f'<div class="status-unavailable"><strong>{ps.get("provider")}</strong><br>{msg}</div>', unsafe_allow_html=True)
+            provider = html.escape(str(ps.get("provider", "Fonte")))
+            st.markdown(f'<div class="status-unavailable"><strong>{provider}</strong><br>{html.escape(str(msg))}</div>', unsafe_allow_html=True)
 
     offers = result.get("offers") or []
     normalized = result.get("normalized") or {}
@@ -175,7 +277,7 @@ if result is not None:
     chips = []
     for key in ("brand", "model", "storage"):
         if normalized.get(key):
-            chips.append(normalized[key])
+            chips.append(str(normalized[key]))
     if normalized.get("size"):
         chips.append(f'{normalized["size"]}"')
     if normalized.get("refresh_rate"):
