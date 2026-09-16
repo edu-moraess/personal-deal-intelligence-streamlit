@@ -88,42 +88,54 @@ A aplicação ficará disponível localmente em `http://localhost:8501`.
 pytest -v
 ```
 
-## Configuração
+## Mercado Livre e Access Token
 
-O uso básico não exige credenciais.
+A integração usa a API oficial do Mercado Livre. Embora alguns endpoints tenham funcionado sem autenticação em versões anteriores da API, **não devemos depender desse comportamento**. O projeto já aceita `ML_ACCESS_TOKEN` e o passa ao endpoint de busca.
 
-A busca utiliza o endpoint público do Mercado Livre. Caso seja necessário configurar um token oficial, use variável de ambiente ou o mecanismo de Secrets do Streamlit — nunca versione credenciais.
+O Mercado Livre documenta que respostas `401/403` podem ocorrer por ausência, expiração, permissões ou bloqueio do token/IP. Para o deploy, configure um Access Token oficial válido nos Secrets do Streamlit.
 
-Exemplo de variável opcional:
+### Streamlit Community Cloud
+
+Em **Settings → Secrets**, adicione:
+
+```toml
+ML_ACCESS_TOKEN = "SEU_ACCESS_TOKEN"
+```
+
+Nunca coloque esse token no código ou no GitHub.
+
+### Ambiente local
 
 ```bash
 export ML_ACCESS_TOKEN=seu-token
 export PDI_DB_PATH=data/pdi.db
 ```
 
+Depois reinicie o Streamlit e faça uma nova busca.
+
+> Para uso pessoal, o token deve ser tratado como segredo. Se o token expirar, for revogado ou retornar `403`, gere/renove um token oficial e atualize o Secret.
+
 ## Deploy no Streamlit Community Cloud
 
 1. Abra o Streamlit Community Cloud
-2. Crie um novo app
-3. Selecione `edu-moraess/personal-deal-intelligence-streamlit`
-4. Branch: `main`
-5. Main file: `app.py`
-6. Configure Secrets somente se algum provider exigir credencial
-7. Faça o deploy
+2. Selecione `edu-moraess/personal-deal-intelligence-streamlit`
+3. Branch: `main`
+4. Main file: `app.py`
+5. Em **Settings → Secrets**, configure `ML_ACCESS_TOKEN`
+6. Salve os Secrets
+7. Faça **Reboot app**
+
+A aplicação não apresenta resultados fictícios quando a API está indisponível.
 
 ## Tratamento de erros do provider
-
-A aplicação não transforma falhas de API em resultados fictícios:
 
 | Situação | Status interno |
 |---|---|
 | 200 + ofertas | `AVAILABLE` |
-| 403 | `UNAVAILABLE` |
 | 401 | `AUTH_REQUIRED` |
+| 403 | `UNAVAILABLE` com orientação para configurar/validar o token |
 | 429 | `RATE_LIMITED` |
 | 5xx / timeout / rede | `ERROR` / `UNAVAILABLE` |
-
-Quando o provider está indisponível, a interface informa o problema e não apresenta ofertas falsas.
 
 ## Matching de produto
 
@@ -159,7 +171,7 @@ Para histórico e watchlist permanentes, a próxima evolução é migrar a camad
 - Provider real disponível atualmente: Mercado Livre.
 - O endpoint público de busca normalmente não fornece frete numérico; em muitos casos só é possível identificar `free_shipping`.
 - Cupons e cashback **não são aplicados** sem uma fonte verificável.
-- Rate limits ou bloqueios do provider podem resultar em `403` ou `429`.
+- Rate limits, bloqueios ou problemas de autenticação do provider podem resultar em `403` ou `429`.
 
 ## Próxima fase
 
@@ -173,7 +185,7 @@ Para histórico e watchlist permanentes, a próxima evolução é migrar a camad
 ## Segurança
 
 - Não versionar API keys, tokens ou senhas.
-- Segredos devem ficar em variáveis de ambiente ou Secrets.
+- Segredos devem ficar em variáveis de ambiente ou Streamlit Secrets.
 - O projeto TypeScript original associado a este projeto continha credenciais em `.project-config.json`; se esse arquivo foi compartilhado publicamente, as credenciais devem ser rotacionadas.
 
 ## Licença
